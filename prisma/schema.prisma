@@ -12,3 +12,120 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Activity {
+  ONLINE
+  OFFLINE
+  IDLE
+}
+
+model User {
+  id            String                @id @default(uuid()) @db.Uuid
+  email         String                @unique
+  password      String                @db.VarChar(100)
+  name          String?               @db.VarChar(150)
+  phone         String?               @unique @db.VarChar(15)
+  image         String?
+  activity      Activity
+  chats         ChatRoom[]            @relation("ChatRoomParticipants")
+  createdChats  ChatRoom[]            @relation("ChatRoomCreator")
+  groupStatus   GroupMessageStatus[]  @relation("UserGroupStatus")
+  messages      ChatMessage[]
+  reactions     ReactionMessage[]
+  attachments   Attachment[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+enum RoomType {
+  PRIVATE
+  GROUP
+}
+
+model ChatRoom {
+  id            String          @id @default(uuid()) @db.Uuid
+  name          String?
+  description   String?
+  image         String?
+  type          RoomType
+  participants  User[]          @relation("ChatRoomParticipants")
+  messages      ChatMessage[]
+  creator       User?           @relation(fields: [creatorId], references: [id], name: "ChatRoomCreator")
+  creatorId     String?         @db.Uuid
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+enum Reaction {
+  THUMBSUP
+  LOVE
+  CRYING
+  SURPRISED
+}
+
+model ReactionMessage {
+  id            String          @id @default(uuid()) @db.Uuid
+  type          Reaction
+  sender        User?           @relation(fields: [senderId], references: [id])
+  senderId      String?         @db.Uuid
+  message       ChatMessage?    @relation(fields: [messageId], references: [id])
+  messageId     String?         @db.Uuid
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+enum AttachmentType {
+  PHOTO
+  VIDEO
+  FILE
+}
+
+model Attachment {
+  id            String          @id @default(uuid()) @db.Uuid
+  type          AttachmentType
+  size          Int
+  sender        User?           @relation(fields: [senderId], references: [id])
+  senderId      String?         @db.Uuid
+  message       ChatMessage?    @relation(fields: [messageId], references: [id])
+  messageId     String?         @db.Uuid
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+model GroupMessageStatus {
+  id            String          @id @default(uuid()) @db.Uuid
+  status        MessageStatus
+  user          User?           @relation(fields: [userId], references: [id], name: "UserGroupStatus")
+  userId        String?         @db.Uuid
+  message       ChatMessage?    @relation(fields: [messageId], references: [id])
+  messageId     String?         @db.Uuid
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model ChatMessage {
+  id              String                @id @default(uuid()) @db.Uuid
+  message         String?
+  attachments     Attachment[]
+  reactions       ReactionMessage[]
+  repliedTo       ChatMessage?          @relation("RepliedTo", fields: [repliedToId], references: [id])
+  repliedToId     String?               @db.Uuid
+  replies         ChatMessage[]         @relation("RepliedTo")
+  forwardedFrom   ChatMessage?          @relation("ForwardedFrom", fields: [forwardedFromId], references: [id])
+  forwardedFromId String?               @db.Uuid
+  forwards        ChatMessage[]         @relation("ForwardedFrom")
+  status          MessageStatus
+  msgStatuses     GroupMessageStatus[]
+  sender          User?                 @relation(fields: [senderId], references: [id])
+  senderId        String?               @db.Uuid
+  room            ChatRoom?             @relation(fields: [roomId], references: [id])
+  roomId          String?               @db.Uuid
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
