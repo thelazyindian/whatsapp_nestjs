@@ -43,17 +43,18 @@ enum RoomType {
 }
 
 model ChatRoom {
-  id            String          @id @default(uuid()) @db.Uuid
-  name          String?
-  description   String?
-  image         String?
-  type          RoomType
-  participants  User[]          @relation("ChatRoomParticipants")
-  messages      ChatMessage[]
-  creator       User?           @relation(fields: [creatorId], references: [id], name: "ChatRoomCreator")
-  creatorId     String?         @db.Uuid
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id                 String          @id @default(uuid()) @db.Uuid
+  name               String?
+  description        String?
+  image              String?
+  type               RoomType
+  participants       User[]          @relation("ChatRoomParticipants")
+  messages           ChatMessage[]
+  creator            User?           @relation(fields: [creatorId], references: [id], name: "ChatRoomCreator")
+  creatorId          String?         @db.Uuid
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  lastMessagedAt     DateTime        @default(now())
 }
 
 enum Reaction {
@@ -84,6 +85,7 @@ model Attachment {
   id            String          @id @default(uuid()) @db.Uuid
   type          AttachmentType
   size          Int
+  url           String
   sender        User?           @relation(fields: [senderId], references: [id])
   senderId      String?         @db.Uuid
   message       ChatMessage?    @relation(fields: [messageId], references: [id])
@@ -120,7 +122,7 @@ model ChatMessage {
   forwardedFrom   ChatMessage?          @relation("ForwardedFrom", fields: [forwardedFromId], references: [id])
   forwardedFromId String?               @db.Uuid
   forwards        ChatMessage[]         @relation("ForwardedFrom")
-  status          MessageStatus
+  status          MessageStatus         @default(SENT)
   msgStatuses     GroupMessageStatus[]
   sender          User?                 @relation(fields: [senderId], references: [id])
   senderId        String?               @db.Uuid

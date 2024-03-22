@@ -6,11 +6,21 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtGuard } from './auth/guards/jwt.guard';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
-import { UsersModule } from './users/users.module';
 import { LocalStrategy } from './auth/strategy/local.strategy';
+import { EventsModule } from './events/events.module';
+import { RoomModule } from './room/room.module';
+import { UsersModule } from './users/users.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, UsersModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    RoomModule,
+    MessageModule,
+    EventsModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,
